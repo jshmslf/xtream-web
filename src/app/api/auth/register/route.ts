@@ -4,9 +4,9 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json()
+    const { firstName, lastName, email, password } = await req.json()
 
-    if (!name || !email || !password)
+    if (!firstName || !email || !password)
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
 
     if (password.length < 8)
@@ -18,8 +18,8 @@ export async function POST(req: Request) {
 
     const hashed = await bcrypt.hash(password, 12)
     const user   = await db.user.create({
-      data: { name, email, password: hashed },
-      select: { id: true, name: true, email: true },
+      data: { firstName, lastName: lastName ?? null, email, password: hashed },
+      select: { id: true, firstName: true, lastName: true, email: true },
     })
 
     return NextResponse.json(user, { status: 201 })
