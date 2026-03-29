@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: PrismaAdapter(db) as never,
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
@@ -15,43 +15,48 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Credentials({
       name: 'credentials',
       credentials: {
-        email:    { label: 'Email',    type: 'email' },
+        email:    { label: 'Email',    type: 'email'    },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        const email    = credentials?.email    as string | undefined
+        const password = credentials?.password as string | undefined
 
-        const user = await db.user.findUnique({
-          where: { email: credentials.email as string },
-        })
+        if (!email || !password) return null
 
-        if (!user || !user.password) return null
+        const user = await db.user.findUnique({ where: { email } })
 
-        const valid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        )
+        if (!user?.password) return null
 
+        const valid = await bcrypt.compare(password, user.password)
         if (!valid) return null
 
         return {
-          id: user.id,
-          firstname: user.firstName,
-          lastname:  user.lastName,
-          email: user.email,
-          image: user.image,
+          id:        user.id,
+          firstName: user.firstName,
+          lastName:  user.lastName ?? null,
+          email:     user.email,
+          image:     user.image    ?? null,
         }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id
+      if (user) {
+        token.id        = user.id
+        token.firstName = user.firstName
+        token.lastName  = user.lastName  ?? null
+        token.image     = user.image     ?? null
+      }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string
+        session.user.id        = token.id        as string
+        session.user.firstName = token.firstName as string
+        session.user.lastName  = (token.lastName  as string | null) ?? null
+        session.user.image     = (token.image     as string | null) ?? null
       }
       return session
     },
