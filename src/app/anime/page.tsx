@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import BrowseGrid from '@/components/BrowseGrid'
 
 const FILTERS = [
@@ -10,11 +11,8 @@ const FILTERS = [
 
 export default function AnimePage() {
   return (
-    <BrowseGrid
-      title="Anime"
-      endpoint="/api/anime"
-      filters={FILTERS}
-      mediaType="anime"
-    />
+    <Suspense>
+      <BrowseGrid title="Anime" endpoint="/api/anime" filters={FILTERS} mediaType="anime" />
+    </Suspense>
   )
 }

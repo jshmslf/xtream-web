@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 import MovieCard from '@/components/MovieCard'
 import type { TMDBSearchResult } from '@/types/tmdb'
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams()
   const router       = useRouter()
 
@@ -31,7 +31,6 @@ export default function SearchPage() {
     }
   }, [])
 
-  // Run on initial load if q is in URL
   useEffect(() => {
     const q = searchParams.get('q') ?? ''
     setQuery(q)
@@ -59,22 +58,18 @@ export default function SearchPage() {
     <main style={{ background: '#0a0a0f', minHeight: '100vh', paddingTop: '90px' }}>
       <div style={{ maxWidth: '1390px', margin: '0 auto', padding: '2rem' }}>
 
-        {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{
             fontFamily: "'Bebas Neue', sans-serif",
             fontSize: 'clamp(36px, 5vw, 56px)',
-            letterSpacing: '2px',
-            color: '#f0eff5',
-            lineHeight: 1,
-            marginBottom: '0.5rem',
+            letterSpacing: '2px', color: '#f0eff5',
+            lineHeight: 1, marginBottom: '0.5rem',
           }}>
             {q ? `Results for "${q}"` : 'Search'}
           </h1>
           <div className="bg-accent" style={{ width: '48px', height: '3px', borderRadius: '2px' }} />
         </div>
 
-        {/* Search bar */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '2rem' }}>
           <div style={{
             flex: 1, display: 'flex', alignItems: 'center', gap: '10px',
@@ -86,38 +81,22 @@ export default function SearchPage() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search movies, shows..."
-              style={{
-                flex: 1, background: 'transparent', border: 'none', outline: 'none',
-                color: '#f0eff5', fontSize: '15px',
-              }}
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#f0eff5', fontSize: '15px' }}
             />
           </div>
-          <button
-            type="submit"
-            className="bg-accent"
-            style={{
-              color: '#fff', border: 'none', borderRadius: '10px',
-              padding: '0 24px', fontSize: '14px', fontFamily: 'inherit', cursor: 'pointer',
-            }}
-          >
+          <button type="submit" className="bg-accent" style={{
+            color: '#fff', border: 'none', borderRadius: '10px',
+            padding: '0 24px', fontSize: '14px', fontFamily: 'inherit', cursor: 'pointer',
+          }}>
             Search
           </button>
         </form>
 
-        {/* States */}
         {!init && loading ? (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            gap: '16px',
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
             {Array.from({ length: 20 }).map((_, i) => (
               <div key={i}>
-                <div style={{
-                  aspectRatio: '2/3', borderRadius: '10px',
-                  background: '#1c1c27', animation: 'pulse 1.5s ease-in-out infinite',
-                  animationDelay: `${i * 0.05}s`,
-                }} />
+                <div style={{ aspectRatio: '2/3', borderRadius: '10px', background: '#1c1c27', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.05}s` }} />
                 <div style={{ height: '12px', borderRadius: '4px', background: '#1c1c27', marginTop: '10px', width: '80%' }} />
               </div>
             ))}
@@ -127,38 +106,23 @@ export default function SearchPage() {
             No results found for &ldquo;{q}&rdquo;.
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            gap: '16px',
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px' }}>
             {results.map((item, i) => (
-              <div
-                key={`${item.id}-${i}`}
-                style={{ animation: 'fadeUp 0.3s ease both', animationDelay: `${Math.min(i * 0.03, 0.6)}s` }}
-              >
+              <div key={`${item.id}-${i}`} style={{ animation: 'fadeUp 0.3s ease both', animationDelay: `${Math.min(i * 0.03, 0.6)}s` }}>
                 <MovieCard item={item} />
               </div>
             ))}
           </div>
         )}
 
-        {/* Load more */}
         {init && page < total && (
           <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <button
-              onClick={loadMore}
-              disabled={loading}
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                color: loading ? '#555' : '#f0eff5',
-                border: '0.5px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px', padding: '12px 40px',
-                fontSize: '14px', fontFamily: 'inherit',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
+            <button onClick={loadMore} disabled={loading} style={{
+              background: 'rgba(255,255,255,0.05)', color: loading ? '#555' : '#f0eff5',
+              border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '10px',
+              padding: '12px 40px', fontSize: '14px', fontFamily: 'inherit',
+              cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s',
+            }}>
               {loading ? 'Loading...' : 'Load more'}
             </button>
           </div>
@@ -167,15 +131,17 @@ export default function SearchPage() {
       </div>
 
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse  { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
       `}</style>
     </main>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchContent />
+    </Suspense>
   )
 }

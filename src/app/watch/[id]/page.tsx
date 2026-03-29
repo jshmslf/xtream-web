@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { Suspense, use, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Player from '@/components/Player'
 import EpisodeList from '@/components/EpisodeList'
@@ -16,7 +16,7 @@ interface Meta {
   posterPath: string | null
 }
 
-export default function WatchPage({ params }: PageProps) {
+function WatchContent({ params }: PageProps) {
   const { id }       = use(params)
   const searchParams = useSearchParams()
   const type         = (searchParams.get('type') ?? 'movie') as 'movie' | 'tv'
@@ -46,12 +46,12 @@ export default function WatchPage({ params }: PageProps) {
   }, [id, type])
 
   useProgress({
-    tmdbId:      Number(id),
-    mediaType:   type,
-    title:       meta.title,
-    posterPath:  meta.posterPath,
-    season:      type === 'tv' ? season  : null,
-    episode:     type === 'tv' ? episode : null,
+    tmdbId:       Number(id),
+    mediaType:    type,
+    title:        meta.title,
+    posterPath:   meta.posterPath,
+    season:       type === 'tv' ? season  : null,
+    episode:      type === 'tv' ? episode : null,
     totalSeconds: 0,
   })
 
@@ -103,5 +103,13 @@ export default function WatchPage({ params }: PageProps) {
 
       </div>
     </main>
+  )
+}
+
+export default function WatchPage({ params }: PageProps) {
+  return (
+    <Suspense>
+      <WatchContent params={params} />
+    </Suspense>
   )
 }

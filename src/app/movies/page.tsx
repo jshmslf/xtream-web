@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import BrowseGrid from '@/components/BrowseGrid'
 
 const FILTERS = [
@@ -15,11 +16,8 @@ const FILTERS = [
 
 export default function MoviesPage() {
   return (
-    <BrowseGrid
-      title="Movies"
-      endpoint="/api/movies"
-      filters={FILTERS}
-      mediaType="movie"
-    />
+    <Suspense>
+      <BrowseGrid title="Movies" endpoint="/api/movies" filters={FILTERS} mediaType="movie" />
+    </Suspense>
   )
 }
