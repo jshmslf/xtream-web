@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String?
+  email     String   @unique
+  password  String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  watchHistory WatchHistory[]
+  favorites    Favorite[]
+}
+
+// ── NextAuth required tables ──
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── App tables ──
+
+model WatchHistory {
+  id         String    @id @default(cuid())
+  userId     String
+  tmdbId     Int
+  mediaType  MediaType
+  title      String
+  posterPath String?
+
+  // Progress tracking
+  watchedSeconds Int     @default(0)
+  totalSeconds   Int     @default(0)
+  percentWatched Float   @default(0) // 0-100
+  counted        Boolean @default(false) // true when >= 30%
+
+  // For TV shows and anime episodes
+  season       Int?
+  episode      Int?
+  episodeTitle String?
+
+  lastWatchedAt DateTime @default(now()) @updatedAt
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbId, mediaType, season, episode])
+  @@index([userId, lastWatchedAt])
+  @@index([userId, mediaType])
+}
+
+model Favorite {
+  id         String    @id @default(cuid())
+  userId     String
+  tmdbId     Int
+  mediaType  MediaType
+  title      String
+  posterPath String?
+  addedAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tmdbId, mediaType])
+  @@index([userId, addedAt])
+  @@index([userId, mediaType]) // fast filter by Movie / TV / Anime
+}
+
+// ── Enums ──
+
+enum MediaType {
+  movie
+  tv
+  anime
+}

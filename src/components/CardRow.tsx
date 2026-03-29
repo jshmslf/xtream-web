@@ -1,13 +1,15 @@
+import Link from 'next/link'
 import MovieCard from '@/components/MovieCard'
 import type { TMDBMovie, TMDBShow } from '@/types/tmdb'
 
 interface CardRowProps {
-  title: string
-  items: (TMDBMovie | TMDBShow)[]
-  type: 'movie' | 'tv'
+  title:       string
+  items:       (TMDBMovie | TMDBShow)[]
+  type:        'movie' | 'tv'
+  seeAllHref?: string
 }
 
-export default function CardRow({ title, items, type }: CardRowProps) {
+export default function CardRow({ title, items, type, seeAllHref }: CardRowProps) {
   if (!items?.length) return null
 
   return (
@@ -25,12 +27,11 @@ export default function CardRow({ title, items, type }: CardRowProps) {
         }}>
           {title}
         </h2>
-        <span style={{
-          fontSize: '12px', color: '#E24B4A', cursor: 'pointer',
-          transition: 'opacity 0.2s',
-        }}>
-          See all →
-        </span>
+        {seeAllHref ? (
+          <Link href={seeAllHref} className="text-accent" style={{ fontSize: '12px', transition: 'opacity 0.2s', textDecoration: 'none' }}>
+            See all →
+          </Link>
+        ) : null}
       </div>
 
       {/* Scrollable Row */}

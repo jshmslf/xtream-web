@@ -86,7 +86,7 @@ export default function MovieDetail({ params }: PageProps) {
 
             <HeroButtons
               watchUrl={`/watch/${id}?type=movie`}
-              detailUrl={`/movie/${id}`}
+              detailUrl={`/movies/${id}`}
             />
           </div>
         </div>

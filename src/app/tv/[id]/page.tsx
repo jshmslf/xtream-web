@@ -1,8 +1,9 @@
 import { use } from 'react'
 import { fetchTMDB, imgUrl } from '@/lib/tmdb'
 import Image from 'next/image'
-import type { TMDBShow } from '@/types/tmdb'
+import type { TMDBShow, TMDBCastMember } from '@/types/tmdb'
 import HeroButtons from '@/components/HeroButton'
+import EpisodeList from '@/components/EpisodeList'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -14,7 +15,7 @@ export default function TVDetail({ params }: PageProps) {
   const [detail, credits] = use(Promise.all([
     fetchTMDB(`/tv/${id}`),
     fetchTMDB(`/tv/${id}/credits`),
-  ])) as [TMDBShow, { cast: any[] }]
+  ])) as [TMDBShow, { cast: TMDBCastMember[] }]
 
   const cast = credits.cast.slice(0, 8)
 
@@ -83,6 +84,7 @@ export default function TVDetail({ params }: PageProps) {
           </div>
         </div>
 
+        {/* Cast */}
         {cast.length > 0 && (
           <>
             <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '1.5px', margin: '3rem 0 1.25rem' }}>
@@ -102,6 +104,16 @@ export default function TVDetail({ params }: PageProps) {
                 </div>
               ))}
             </div>
+          </>
+        )}
+
+        {/* Episodes */}
+        {detail.seasons?.length > 0 && (
+          <>
+            <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '1.5px', margin: '3rem 0 1.25rem' }}>
+              Episodes
+            </h2>
+            <EpisodeList showId={detail.id} seasons={detail.seasons} />
           </>
         )}
       </div>

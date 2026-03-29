@@ -46,17 +46,16 @@ export default function Hero({ item, type }: HeroProps) {
       }} />
 
       {/* Content */}
-      <div style={{
+      <div className='content-wrapper' style={{
         position: 'absolute', inset: 0,
         display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
         padding: '3rem 3rem 4rem',
-        maxWidth: '640px',
       }}>
 
         {/* Badge */}
-        <div style={{
+        <div className="bg-accent" style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          background: '#E24B4A', color: '#fff',
+          color: '#fff',
           fontSize: '10px', fontWeight: 500, letterSpacing: '2px', textTransform: 'uppercase',
           padding: '4px 12px', borderRadius: '4px',
           marginBottom: '1rem', width: 'fit-content',
@@ -90,8 +89,7 @@ export default function Hero({ item, type }: HeroProps) {
           {!isMovie(item) && (
             <span>{item.number_of_seasons} Season{item.number_of_seasons !== 1 ? 's' : ''}</span>
           )}
-          <span style={{
-            background: 'rgba(226,75,74,0.15)', color: '#E24B4A',
+          <span className="bg-accent/15 text-accent" style={{
             padding: '2px 8px', borderRadius: '4px', fontSize: '10px',
             fontWeight: 500, letterSpacing: '1px',
           }}>
