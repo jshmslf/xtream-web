@@ -22,6 +22,7 @@ function WatchContent({ params }: PageProps) {
   const type         = (searchParams.get('type') ?? 'movie') as 'movie' | 'tv'
   const season       = Number(searchParams.get('s') ?? '1')
   const episode      = Number(searchParams.get('e') ?? '1')
+  const isAnime      = searchParams.get('anime') === '1'
 
   const [show, setShow] = useState<TMDBShow | null>(null)
   const [meta, setMeta] = useState<Meta>({ title: '', posterPath: null })
@@ -63,7 +64,7 @@ function WatchContent({ params }: PageProps) {
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
 
             <div style={{ flex: '1 1 600px', minWidth: 0 }}>
-              <Player tmdbId={id} type="tv" season={season} episode={episode} />
+              <Player tmdbId={id} type="tv" season={season} episode={episode} isAnime={isAnime} />
               {show && (
                 <div style={{ marginTop: '1rem' }}>
                   <p style={{ fontSize: '13px', color: '#8884a0' }}>
@@ -91,13 +92,15 @@ function WatchContent({ params }: PageProps) {
                   seasons={show.seasons}
                   currentSeason={season}
                   currentEpisode={episode}
+                  variant="dropdown"
+                  isAnime={isAnime}
                 />
               </div>
             )}
           </div>
         ) : (
           <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-            <Player tmdbId={id} type="movie" />
+            <Player tmdbId={id} type="movie" isAnime={isAnime} />
           </div>
         )}
 

@@ -4,27 +4,25 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
-import { getGuestToken } from '@/lib/guestToken'
 import { imgUrl } from '@/lib/tmdb'
 import type { WatchHistoryRecord } from '@/types/tmdb'
 
 export default function RecentlyWatched() {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
   const [items, setItems] = useState<WatchHistoryRecord[]>([])
 
   useEffect(() => {
-    if (status === 'loading') return
+    // Only fetch for authenticated users
+    if (status !== 'authenticated' || !session?.user?.id) return
 
-    const token = status === 'authenticated' ? '' : getGuestToken()
-    const url   = token ? `/api/history?token=${token}` : '/api/history'
-
-    fetch(url)
+    fetch('/api/history')
       .then(r => r.json())
       .then(d => Array.isArray(d) && setItems(d))
       .catch(() => {})
-  }, [status])
+  }, [status, session?.user?.id])
 
-  if (!items.length) return null
+  // Don't render anything for guests or while loading
+  if (status !== 'authenticated' || !items.length) return null
 
   return (
     <section style={{ padding: '1.5rem 2rem' }}>

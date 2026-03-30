@@ -10,6 +10,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com https://www.vidking.net https://multiembed.mov;",
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;

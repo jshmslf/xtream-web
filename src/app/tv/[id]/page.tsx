@@ -1,9 +1,11 @@
 import { use } from 'react'
 import { fetchTMDB, imgUrl } from '@/lib/tmdb'
 import Image from 'next/image'
-import type { TMDBShow, TMDBCastMember } from '@/types/tmdb'
+import type { TMDBShow, TMDBCastMember, TMDBVideo } from '@/types/tmdb'
 import HeroButtons from '@/components/HeroButton'
 import EpisodeList from '@/components/EpisodeList'
+import FavoriteButton from '@/components/FavoriteButton'
+import TrailerBackdrop from '@/components/TrailerBackdrop'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -12,30 +14,24 @@ interface PageProps {
 export default function TVDetail({ params }: PageProps) {
   const { id } = use(params)
 
-  const [detail, credits] = use(Promise.all([
+  const [detail, credits, videos] = use(Promise.all([
     fetchTMDB(`/tv/${id}`),
     fetchTMDB(`/tv/${id}/credits`),
-  ])) as [TMDBShow, { cast: TMDBCastMember[] }]
+    fetchTMDB(`/tv/${id}/videos`),
+  ])) as [TMDBShow, { cast: TMDBCastMember[] }, { results: TMDBVideo[] }]
 
-  const cast = credits.cast.slice(0, 8)
+  const cast    = credits.cast.slice(0, 8)
+  const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') ?? null
+  const isAnime = detail.original_language === 'ja' && detail.genres?.some(g => g.id === 16)
 
   return (
     <main style={{ background: '#0a0a0f', color: '#f0eff5', minHeight: '100vh' }}>
 
-      {detail.backdrop_path && (
-        <div style={{ position: 'relative', height: '420px', overflow: 'hidden' }}>
-          <Image
-            src={imgUrl(detail.backdrop_path, 'original')}
-            alt={detail.name}
-            fill priority
-            style={{ objectFit: 'cover', objectPosition: 'top center' }}
-          />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, #0a0a0f 0%, rgba(10,10,15,0.5) 60%, transparent 100%)',
-          }} />
-        </div>
-      )}
+      <TrailerBackdrop
+        trailerKey={trailer?.key ?? null}
+        backdropPath={detail.backdrop_path}
+        alt={detail.name}
+      />
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem 4rem', marginTop: '-120px', position: 'relative', zIndex: 2 }}>
         <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
@@ -77,10 +73,18 @@ export default function TVDetail({ params }: PageProps) {
               {detail.overview}
             </p>
 
-            <HeroButtons
-              watchUrl={`/watch/${id}?type=tv&s=1&e=1`}
-              detailUrl={`/tv/${id}`}
-            />
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <HeroButtons
+                watchUrl={`/watch/${id}?type=tv&s=1&e=1${isAnime ? '&anime=1' : ''}`}
+                detailUrl={`/tv/${id}`}
+              />
+              <FavoriteButton
+                tmdbId={detail.id}
+                mediaType="tv"
+                title={detail.name}
+                posterPath={detail.poster_path}
+              />
+            </div>
           </div>
         </div>
 
@@ -113,7 +117,7 @@ export default function TVDetail({ params }: PageProps) {
             <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '1.5px', margin: '3rem 0 1.25rem' }}>
               Episodes
             </h2>
-            <EpisodeList showId={detail.id} seasons={detail.seasons} />
+            <EpisodeList showId={detail.id} seasons={detail.seasons} isAnime={isAnime} />
           </>
         )}
       </div>

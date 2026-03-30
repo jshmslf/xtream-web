@@ -1,8 +1,10 @@
 import { use } from 'react'
 import { fetchTMDB, imgUrl } from '@/lib/tmdb'
 import Image from 'next/image'
-import type { TMDBMovie } from '@/types/tmdb'
+import type { TMDBMovie, TMDBCastMember, TMDBVideo } from '@/types/tmdb'
 import HeroButtons from '@/components/HeroButton'
+import FavoriteButton from '@/components/FavoriteButton'
+import TrailerBackdrop from '@/components/TrailerBackdrop'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -15,29 +17,19 @@ export default function MovieDetail({ params }: PageProps) {
     fetchTMDB(`/movie/${id}`),
     fetchTMDB(`/movie/${id}/credits`),
     fetchTMDB(`/movie/${id}/videos`),
-  ])) as [TMDBMovie, { cast: any[] }, { results: any[] }]
+  ])) as [TMDBMovie, { cast: TMDBCastMember[] }, { results: TMDBVideo[] }]
 
   const cast    = credits.cast.slice(0, 8)
-  const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube')
+  const trailer    = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') ?? null
 
   return (
     <main style={{ background: '#0a0a0f', color: '#f0eff5', minHeight: '100vh' }}>
 
-      {/* Backdrop */}
-      {detail.backdrop_path && (
-        <div style={{ position: 'relative', height: '420px', overflow: 'hidden' }}>
-          <Image
-            src={imgUrl(detail.backdrop_path, 'original')}
-            alt={detail.title}
-            fill priority
-            style={{ objectFit: 'cover', objectPosition: 'top center' }}
-          />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, #0a0a0f 0%, rgba(10,10,15,0.5) 60%, transparent 100%)',
-          }} />
-        </div>
-      )}
+      <TrailerBackdrop
+        trailerKey={trailer?.key ?? null}
+        backdropPath={detail.backdrop_path}
+        alt={detail.title}
+      />
 
       {/* Detail content */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem 4rem', marginTop: '-120px', position: 'relative', zIndex: 2 }}>
@@ -84,10 +76,18 @@ export default function MovieDetail({ params }: PageProps) {
               {detail.overview}
             </p>
 
-            <HeroButtons
-              watchUrl={`/watch/${id}?type=movie`}
-              detailUrl={`/movies/${id}`}
-            />
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <HeroButtons
+                watchUrl={`/watch/${id}?type=movie`}
+                detailUrl={`/movies/${id}`}
+              />
+              <FavoriteButton
+                tmdbId={detail.id}
+                mediaType="movie"
+                title={detail.title}
+                posterPath={detail.poster_path}
+              />
+            </div>
           </div>
         </div>
 
@@ -114,21 +114,7 @@ export default function MovieDetail({ params }: PageProps) {
           </>
         )}
 
-        {/* Trailer */}
-        {trailer && (
-          <>
-            <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '1.5px', margin: '3rem 0 1.25rem' }}>
-              Trailer
-            </h2>
-            <div style={{ position: 'relative', paddingBottom: '56.25%', borderRadius: '12px', overflow: 'hidden' }}>
-              <iframe
-                src={`https://www.youtube.com/embed/${trailer.key}`}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
-                allowFullScreen
-              />
-            </div>
-          </>
-        )}
+        {/* Trailer section removed — playing in background above */}
       </div>
     </main>
   )

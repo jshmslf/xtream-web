@@ -23,7 +23,7 @@ export function useProgress(opts: ProgressOptions) {
   const saved      = useRef(0)
 
   useEffect(() => {
-    if (!opts.tmdbId) return
+    if (!opts.tmdbId || !opts.title) return
 
     elapsed.current = 0
     saved.current   = 0
@@ -59,5 +59,5 @@ export function useProgress(opts: ProgressOptions) {
       clearInterval(tick)
       clearInterval(save)
     }
-  }, [opts.tmdbId, opts.season, opts.episode, status])
+  }, [opts.tmdbId, opts.title, opts.season, opts.episode, status])
 }

@@ -2,30 +2,31 @@
 import { useState } from 'react'
 
 interface PlayerProps {
-  tmdbId: string | number
-  type?: 'movie' | 'tv'
-  season?: number | string
+  tmdbId:   string | number
+  type?:    'movie' | 'tv'
+  season?:  number | string
   episode?: number | string
+  isAnime?: boolean
 }
 
-const ACCENT = '1db954'
+const ACCENT = '1DB954' // #1DB954 is Spotify Green, chosen for its vibrant and modern feel, enhancing the visual appeal of the player controls.
 
 const SOURCES = {
-  movie: (id: string | number) => [
-    `https://www.vidking.net/embed/movie/${id}?color=${ACCENT}&autoPlay=true`,
+  movie: (id: string | number, isAnime: boolean) => [
+    `https://www.vidking.net/embed/movie/${id}?color=${ACCENT}&autoPlay=true${isAnime ? '&lang=ja' : ''}`,
     `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`,
   ],
-  tv: (id: string | number, s: number | string, e: number | string) => [
-    `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true`,
+  tv: (id: string | number, s: number | string, e: number | string, isAnime: boolean) => [
+    `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${ACCENT}&autoPlay=true&nextEpisode=true&episodeSelector=true${isAnime ? '&lang=ja' : ''}`,
     `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
   ],
 }
 
-export default function Player({ tmdbId, type = 'movie', season = 1, episode = 1 }: PlayerProps) {
+export default function Player({ tmdbId, type = 'movie', season = 1, episode = 1, isAnime = false }: PlayerProps) {
   const [sourceIdx, setSourceIdx] = useState(0)
   const urls = type === 'movie'
-    ? SOURCES.movie(tmdbId)
-    : SOURCES.tv(tmdbId, season, episode)
+    ? SOURCES.movie(tmdbId, isAnime)
+    : SOURCES.tv(tmdbId, season, episode, isAnime)
   const labels = urls.map((_, i) => `Source ${i + 1}`)
 
   return (

@@ -22,10 +22,18 @@ export async function GET(req: Request) {
         ...(mediaType && { mediaType }),
       },
       orderBy: { lastWatchedAt: 'desc' },
-      take: 20,
+      take: 100,
     })
 
-    return NextResponse.json(history)
+    // Deduplicate by tmdbId — keep only the most recent entry per show/movie
+    const seen = new Set<number>()
+    const deduped = history.filter(h => {
+      if (seen.has(h.tmdbId)) return false
+      seen.add(h.tmdbId)
+      return true
+    }).slice(0, 20)
+
+    return NextResponse.json(deduped)
   } catch {
     return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 })
   }

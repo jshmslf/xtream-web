@@ -22,6 +22,7 @@ export interface TMDBShow {
   number_of_seasons: number
   genres: { id: number; name: string }[]
   seasons: TMDBSeasonSummary[]
+  original_language: string
   media_type?: 'tv'
 }
 

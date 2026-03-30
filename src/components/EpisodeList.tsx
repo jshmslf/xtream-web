@@ -3,18 +3,20 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { ChevronDown } from 'lucide-react'
 import { imgUrl } from '@/lib/tmdb'
 import type { TMDBSeasonSummary, TMDBEpisode } from '@/types/tmdb'
 
 interface EpisodeListProps {
-  showId:   number
-  seasons:  TMDBSeasonSummary[]
-  // if provided, highlights the current episode (watch page)
+  showId:          number
+  seasons:         TMDBSeasonSummary[]
   currentSeason?:  number
   currentEpisode?: number
+  variant?:        'pills' | 'dropdown'
+  isAnime?:        boolean
 }
 
-export default function EpisodeList({ showId, seasons, currentSeason, currentEpisode }: EpisodeListProps) {
+export default function EpisodeList({ showId, seasons, currentSeason, currentEpisode, variant = 'pills', isAnime = false }: EpisodeListProps) {
   const router = useRouter()
 
   const validSeasons = seasons.filter(s => s.season_number > 0)
@@ -33,31 +35,55 @@ export default function EpisodeList({ showId, seasons, currentSeason, currentEpi
   }, [showId, selectedSeason])
 
   function handleEpisodeClick(ep: TMDBEpisode) {
-    router.push(`/watch/${showId}?type=tv&s=${ep.season_number}&e=${ep.episode_number}`)
+    const base = `/watch/${showId}?type=tv&s=${ep.season_number}&e=${ep.episode_number}`
+    router.push(isAnime ? `${base}&anime=1` : base)
   }
 
   return (
     <div>
       {/* Season selector */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-        {validSeasons.map(s => (
-          <button
-            key={s.season_number}
-            onClick={() => setSelectedSeason(s.season_number)}
+      {variant === 'dropdown' ? (
+        <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
+          <select
+            value={selectedSeason}
+            onChange={e => setSelectedSeason(Number(e.target.value))}
             style={{
-              padding: '5px 16px', borderRadius: '20px', fontSize: '13px',
-              fontFamily: 'inherit', cursor: 'pointer', transition: 'all 0.15s',
-              background: selectedSeason === s.season_number ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-              color:      selectedSeason === s.season_number ? '#fff' : '#8884a0',
-              border:     selectedSeason === s.season_number
-                ? '0.5px solid var(--accent)'
-                : '0.5px solid rgba(255,255,255,0.08)',
+              width: '100%', padding: '8px 36px 8px 12px',
+              background: '#1c1c27', color: '#f0eff5',
+              border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '8px',
+              fontSize: '13px', fontFamily: 'inherit', cursor: 'pointer',
+              appearance: 'none', outline: 'none',
             }}
           >
-            {s.name ?? `Season ${s.season_number}`}
-          </button>
-        ))}
-      </div>
+            {validSeasons.map(s => (
+              <option key={s.season_number} value={s.season_number}>
+                {s.name ?? `Season ${s.season_number}`}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#8884a0', pointerEvents: 'none' }} />
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+          {validSeasons.map(s => (
+            <button
+              key={s.season_number}
+              onClick={() => setSelectedSeason(s.season_number)}
+              style={{
+                padding: '5px 16px', borderRadius: '20px', fontSize: '13px',
+                fontFamily: 'inherit', cursor: 'pointer', transition: 'all 0.15s',
+                background: selectedSeason === s.season_number ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                color:      selectedSeason === s.season_number ? '#fff' : '#8884a0',
+                border:     selectedSeason === s.season_number
+                  ? '0.5px solid var(--accent)'
+                  : '0.5px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              {s.name ?? `Season ${s.season_number}`}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Episodes */}
       {loading ? (

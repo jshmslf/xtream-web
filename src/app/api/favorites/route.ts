@@ -12,14 +12,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
-
-    // Optional filter — movie | tv | anime | all
     const mediaType = searchParams.get('mediaType') as MediaType | null
+    const tmdbId    = searchParams.get('tmdbId') ? parseInt(searchParams.get('tmdbId')!) : null
 
     const favorites = await db.favorite.findMany({
       where: {
         userId: session.user.id,
         ...(mediaType && VALID_MEDIA_TYPES.includes(mediaType) && { mediaType }),
+        ...(tmdbId && { tmdbId }),
       },
       orderBy: { addedAt: 'desc' },
     })
