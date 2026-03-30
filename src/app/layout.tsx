@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import SessionProvider from "@/components/SessionProvider";
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -37,6 +38,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
       <body className="min-h-full flex flex-col">
+        <Analytics/>
         <SessionProvider>
           <Navbar />
           {children}
