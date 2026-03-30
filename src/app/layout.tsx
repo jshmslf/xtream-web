@@ -3,6 +3,7 @@ import { DM_Sans, Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import SessionProvider from "@/components/SessionProvider";
 import { Analytics } from "@vercel/analytics/next"
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         <SessionProvider>
           <Navbar />
           {children}
+          <Footer />
         </SessionProvider>
       </body>
     </html>

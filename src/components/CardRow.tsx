@@ -43,7 +43,7 @@ export default function CardRow({ title, items, type, seeAllHref }: CardRowProps
   }
 
   return (
-    <section style={{ padding: '1.5rem 2rem' }}>
+    <section style={{ padding: '1.25rem 1rem' }} className="sm:px-6 lg:px-8">
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -76,9 +76,9 @@ export default function CardRow({ title, items, type, seeAllHref }: CardRowProps
       </div>
 
       {/* Scrollable Row */}
-      <div ref={rowRef} style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div ref={rowRef} style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '12px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {items.map(item => (
-          <div key={item.id} style={{ flex: '0 0 160px' }}>
+          <div key={item.id} style={{ flex: '0 0 130px' }} className="sm:flex-[0_0_150px] lg:flex-[0_0_160px]">
             <MovieCard
               item={{
                 id: item.id,

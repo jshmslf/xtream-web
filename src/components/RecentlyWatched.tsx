@@ -25,7 +25,7 @@ export default function RecentlyWatched() {
   if (status !== 'authenticated' || !items.length) return null
 
   return (
-    <section style={{ padding: '1.5rem 2rem' }}>
+    <section style={{ padding: '1.25rem 1rem' }} className="sm:px-6 lg:px-8">
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '1.5px', color: '#f0eff5' }}>

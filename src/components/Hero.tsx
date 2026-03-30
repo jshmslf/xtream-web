@@ -18,8 +18,7 @@ export default function Hero({ item, type }: HeroProps) {
   const year     = isMovie(item)
     ? item.release_date?.slice(0, 4)
     : item.first_air_date?.slice(0, 4)
-  const watchUrl = `/${type}/${item.id}`
-  const detailUrl = `/${type}/${item.id}`
+  const watchUrl  = `/watch/${item.id}?type=${type}`
 
   return (
     <section style={{ position: 'relative', height: '85vh', minHeight: '560px', overflow: 'hidden' }}>
@@ -126,10 +125,7 @@ export default function Hero({ item, type }: HeroProps) {
         )}
 
         {/* Actions */}
-        <HeroButtons
-          watchUrl={`/watch/${item.id}?type=${type}`}
-          detailUrl={detailUrl}
-        />
+        <HeroButtons watchUrl={watchUrl} />
       </div>
 
     </section>

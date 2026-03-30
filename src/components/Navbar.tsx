@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -18,7 +18,9 @@ import {
   Bookmark, ChevronDown, History, Menu, X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { imgUrl } from '@/lib/tmdb'
 import UserAvatar from '@/components/UserAvatar'
+import type { TMDBSearchResult } from '@/types/tmdb'
 
 const NAV_LINKS = [
   { label: 'Home',         href: '/'          },
@@ -33,10 +35,14 @@ export default function Navbar() {
   const router   = useRouter()
   const { data: session, status } = useSession()
 
-  const [scrolled,   setScrolled]   = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [menuOpen,   setMenuOpen]   = useState(false)
-  const [query,      setQuery]      = useState('')
+  const [scrolled,     setScrolled]     = useState(false)
+  const [searchOpen,   setSearchOpen]   = useState(false)
+  const [menuOpen,     setMenuOpen]     = useState(false)
+  const [query,        setQuery]        = useState('')
+  const [suggestions,  setSuggestions]  = useState<TMDBSearchResult[]>([])
+  const [suggesting,   setSuggesting]   = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchWrapRef = useRef<HTMLDivElement>(null)
 
   const user      = session?.user
   const isLoading = status === 'loading'
@@ -63,7 +69,32 @@ export default function Navbar() {
       setQuery('')
       setSearchOpen(false)
       setMenuOpen(false)
+      setSuggestions([])
     }
+  }
+
+  function handleQueryChange(val: string) {
+    setQuery(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!val.trim()) { setSuggestions([]); return }
+    debounceRef.current = setTimeout(async () => {
+      setSuggesting(true)
+      try {
+        const res  = await fetch(`/api/search?q=${encodeURIComponent(val.trim())}&page=1`)
+        const data = await res.json()
+        setSuggestions((data.results ?? []).slice(0, 6))
+      } finally {
+        setSuggesting(false)
+      }
+    }, 300)
+  }
+
+  function closeSuggestions() {
+    setTimeout(() => setSuggestions([]), 150)
+  }
+
+  function suggestionHref(item: TMDBSearchResult) {
+    return item.media_type === 'tv' ? `/tv/${item.id}` : `/movies/${item.id}`
   }
 
   function handleSignOut() {
@@ -117,11 +148,12 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
 
             {/* Search */}
-            <form onSubmit={handleSearch} className="flex items-center">
+            <form onSubmit={handleSearch} className="flex items-center" style={{ position: 'relative' }}>
               <div
+                ref={searchWrapRef}
                 className={cn(
                   'flex items-center gap-2 overflow-hidden transition-all duration-300 rounded-md',
-                  searchOpen ? 'w-44 sm:w-52 bg-neutral-900 border border-neutral-700 px-3' : 'w-8'
+                  searchOpen ? 'w-44 sm:w-64 bg-neutral-900 border border-neutral-700 px-3' : 'w-8'
                 )}
                 style={{ height: '36px' }}
               >
@@ -136,13 +168,73 @@ export default function Navbar() {
                   <input
                     autoFocus
                     value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    onBlur={() => { if (!query) setTimeout(() => setSearchOpen(false), 150) }}
+                    onChange={e => handleQueryChange(e.target.value)}
+                    onBlur={closeSuggestions}
                     placeholder="Search titles..."
                     className="bg-transparent border-none outline-none text-sm text-white placeholder:text-neutral-500 w-full"
                   />
                 )}
               </div>
+
+              {/* Suggestions dropdown */}
+              {searchOpen && suggestions.length > 0 && (
+                <div style={{
+                  position: 'absolute', top: '44px', right: 0,
+                  width: '320px', background: '#13131a',
+                  border: '0.5px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px', overflow: 'hidden',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                  zIndex: 100,
+                }}>
+                  {suggestions.map(item => {
+                    const title = item.title ?? item.name ?? 'Untitled'
+                    const year  = (item.release_date ?? item.first_air_date ?? '').slice(0, 4)
+                    const type  = item.media_type === 'tv' ? 'TV' : 'Movie'
+                    return (
+                      <Link
+                        key={item.id}
+                        href={suggestionHref(item)}
+                        onClick={() => { setSuggestions([]); setSearchOpen(false); setQuery('') }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                          padding: '8px 12px', textDecoration: 'none', color: 'inherit',
+                          transition: 'background 0.15s',
+                        }}
+                        className="hover:bg-white/5"
+                      >
+                        {/* Poster */}
+                        <div style={{ flexShrink: 0, width: '32px', height: '48px', borderRadius: '4px', overflow: 'hidden', background: '#1c1c27', position: 'relative' }}>
+                          <Image src={imgUrl(item.poster_path, 'w92')} alt={title} fill style={{ objectFit: 'cover' }} />
+                        </div>
+                        {/* Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '13px', fontWeight: 500, color: '#f0eff5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</p>
+                          <p style={{ fontSize: '11px', color: '#8884a0', marginTop: '2px' }}>{year}</p>
+                        </div>
+                        {/* Type badge */}
+                        <span style={{
+                          fontSize: '9px', fontWeight: 600, letterSpacing: '0.5px',
+                          padding: '2px 6px', borderRadius: '4px', flexShrink: 0,
+                          background: item.media_type === 'tv' ? 'rgba(55,138,221,0.2)' : 'rgba(var(--accent), 0.2)',
+                          color: item.media_type === 'tv' ? '#378ADD' : 'var(--accent)',
+                        }}>{type}</span>
+                      </Link>
+                    )
+                  })}
+                  {/* See all */}
+                  <button
+                    onMouseDown={() => { router.push(`/search?q=${encodeURIComponent(query.trim())}`); setSuggestions([]); setSearchOpen(false); setQuery('') }}
+                    style={{
+                      width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.03)',
+                      borderTop: '0.5px solid rgba(255,255,255,0.07)', border: 'none',
+                      color: 'var(--accent)', fontSize: '12px', cursor: 'pointer',
+                      fontFamily: 'inherit', textAlign: 'center',
+                    }}
+                  >
+                    See all results for &ldquo;{query}&rdquo;
+                  </button>
+                </div>
+              )}
             </form>
 
             {/* Auth — desktop only */}
