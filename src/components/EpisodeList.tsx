@@ -115,7 +115,7 @@ export default function EpisodeList({ showId, seasons, currentSeason, currentEpi
                 onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.03)' }}
               >
                 {/* Thumbnail */}
-                <div style={{ flexShrink: 0, width: '120px', height: '68px', borderRadius: '6px', overflow: 'hidden', background: '#1c1c27', position: 'relative' }}>
+                <div style={{ flexShrink: 0, width: 'clamp(80px, 20vw, 120px)', height: 'clamp(45px, 11vw, 68px)', borderRadius: '6px', overflow: 'hidden', background: '#1c1c27', position: 'relative' }}>
                   {ep.still_path ? (
                     <Image
                       src={imgUrl(ep.still_path, 'w300')}
@@ -137,14 +137,14 @@ export default function EpisodeList({ showId, seasons, currentSeason, currentEpi
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '13px', fontWeight: 500, color: isCurrent ? 'var(--accent)' : '#f0eff5', marginBottom: '3px' }}>
+                  <p style={{ fontSize: 'clamp(12px, 1.5vw, 13px)', fontWeight: 500, color: isCurrent ? 'var(--accent)' : '#f0eff5', marginBottom: '3px' }}>
                     {ep.episode_number}. {ep.name}
                   </p>
                   {ep.runtime && (
                     <p style={{ fontSize: '11px', color: '#8884a0', marginBottom: '4px' }}>{ep.runtime}m</p>
                   )}
                   {ep.overview && (
-                    <p style={{
+                    <p className="hidden sm:block" style={{
                       fontSize: '11px', color: '#6b6880', lineHeight: '1.5',
                       display: '-webkit-box', WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical', overflow: 'hidden',

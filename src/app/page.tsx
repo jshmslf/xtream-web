@@ -15,6 +15,13 @@ export default async function Home() {
 
   const hero: TMDBMovie = trendingMovies.results[0]
 
+  // Fetch logo for hero item
+  const heroImages = await fetchTMDB(`/movie/${hero.id}/images`, { include_image_language: 'en,null' })
+  const heroLogo   = heroImages.logos?.find((l: { file_path: string; iso_639_1: string }) => l.iso_639_1 === 'en')?.file_path
+    ?? heroImages.logos?.[0]?.file_path
+    ?? null
+  hero.logo_path = heroLogo
+
   return (
     <main style={{ background: '#0a0a0f', minHeight: '100vh' }}>
       <Hero item={hero} type="movie" />

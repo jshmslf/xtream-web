@@ -8,6 +8,7 @@ export interface TMDBMovie {
   vote_average: number
   runtime: number
   genres: { id: number; name: string }[]
+  logo_path?: string | null
   media_type?: 'movie'
 }
 
@@ -23,6 +24,7 @@ export interface TMDBShow {
   genres: { id: number; name: string }[]
   seasons: TMDBSeasonSummary[]
   original_language: string
+  logo_path?: string | null
   media_type?: 'tv'
 }
 

@@ -81,9 +81,9 @@ export default function TrailerBackdrop({ trailerKey, backdropPath, alt }: Trail
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0a0f 0%, rgba(10,10,15,0.4) 60%, transparent 100%)', zIndex: 1 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(10,10,15,0.6) 0%, transparent 60%)', zIndex: 1 }} />
 
-      {/* Controls — only show when trailer is available */}
+      {/* Controls — top-right to avoid overlapping content below */}
       {src && ready && (
-        <div style={{ position: 'absolute', bottom: '1.5rem', right: '1.5rem', display: 'flex', gap: '8px', zIndex: 2 }}>
+        <div style={{ position: 'absolute', top: '4.5rem', right: '1rem', display: 'flex', gap: '8px', zIndex: 2 }}>
           {/* Toggle image/video */}
           <button onClick={toggleImage} title={showImage ? 'Show video' : 'Show image'} style={controlStyle}>
             {showImage ? <Film size={14} /> : <ImageIcon size={14} />}

@@ -58,15 +58,16 @@ function WatchContent({ params }: PageProps) {
 
   return (
     <main style={{ background: '#0a0a0f', minHeight: '100vh', paddingTop: '72px' }}>
-      <div style={{ maxWidth: '1390px', margin: '0 auto', padding: '1.5rem 2rem 4rem' }}>
+      <div style={{ maxWidth: '1390px', margin: '0 auto', padding: '1rem 1rem 4rem' }} className="sm:px-6">
 
         {type === 'tv' ? (
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div className="flex flex-col lg:flex-row" style={{ gap: '1.5rem', alignItems: 'flex-start' }}>
 
-            <div style={{ flex: '1 1 600px', minWidth: 0 }}>
+            {/* Player */}
+            <div className="w-full lg:flex-1" style={{ minWidth: 0 }}>
               <Player tmdbId={id} type="tv" season={season} episode={episode} isAnime={isAnime} />
               {show && (
-                <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginTop: '0.75rem' }}>
                   <p style={{ fontSize: '13px', color: '#8884a0' }}>
                     {show.name} &mdash; S{String(season).padStart(2, '0')}E{String(episode).padStart(2, '0')}
                   </p>
@@ -74,9 +75,10 @@ function WatchContent({ params }: PageProps) {
               )}
             </div>
 
+            {/* Episode panel */}
             {show?.seasons && (
-              <div style={{
-                flex: '0 0 360px', maxHeight: 'calc(100vh - 120px)',
+              <div className="w-full lg:w-[360px] lg:shrink-0" style={{
+                maxHeight: 'calc(100vh - 120px)',
                 overflowY: 'auto', scrollbarWidth: 'thin',
                 scrollbarColor: '#2a2a3a transparent',
               }}>
@@ -99,7 +101,7 @@ function WatchContent({ params }: PageProps) {
             )}
           </div>
         ) : (
-          <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+          <div className="w-full mx-auto" style={{ maxWidth: '960px' }}>
             <Player tmdbId={id} type="movie" isAnime={isAnime} />
           </div>
         )}

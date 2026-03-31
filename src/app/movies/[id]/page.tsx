@@ -13,14 +13,18 @@ interface PageProps {
 export default function MovieDetail({ params }: PageProps) {
   const { id } = use(params)
 
-  const [detail, credits, videos] = use(Promise.all([
+  const [detail, credits, videos, images] = use(Promise.all([
     fetchTMDB(`/movie/${id}`),
     fetchTMDB(`/movie/${id}/credits`),
     fetchTMDB(`/movie/${id}/videos`),
-  ])) as [TMDBMovie, { cast: TMDBCastMember[] }, { results: TMDBVideo[] }]
+    fetchTMDB(`/movie/${id}/images`, { include_image_language: 'en,null' }),
+  ])) as [TMDBMovie, { cast: TMDBCastMember[] }, { results: TMDBVideo[] }, { logos: { file_path: string; iso_639_1: string }[] }]
 
   const cast    = credits.cast.slice(0, 8)
   const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') ?? null
+  const logoPath = images.logos?.find(l => l.iso_639_1 === 'en')?.file_path
+    ?? images.logos?.[0]?.file_path
+    ?? null
 
   return (
     <main style={{ background: '#0a0a0f', color: '#f0eff5', minHeight: '100vh' }}>
@@ -29,28 +33,40 @@ export default function MovieDetail({ params }: PageProps) {
 
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.25rem 4rem', marginTop: '-80px', position: 'relative', zIndex: 2 }}>
 
-        {/* Poster + Info */}
         <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
 
-          {/* Poster — hidden on mobile, shown sm+ */}
+          {/* Poster — sm+ only */}
           <div className="hidden sm:block shrink-0">
-            <Image
-              src={imgUrl(detail.poster_path)}
-              alt={detail.title}
-              width={200} height={300}
-              style={{ borderRadius: '12px', objectFit: 'cover', display: 'block' }}
-            />
+            <Image src={imgUrl(detail.poster_path)} alt={detail.title} width={200} height={300}
+              style={{ borderRadius: '12px', objectFit: 'cover', display: 'block' }} />
           </div>
 
           {/* Info */}
           <div className="flex-1 sm:pt-16">
-            <h1 style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              fontSize: 'clamp(32px, 6vw, 64px)',
-              lineHeight: 1, letterSpacing: '2px', marginBottom: '0.75rem',
-            }}>
-              {detail.title}
-            </h1>
+
+            {/* Logo or title */}
+            {logoPath ? (
+              <div style={{ marginBottom: '1rem' }}>
+                <Image
+                  src={imgUrl(logoPath, 'w500')} alt={detail.title}
+                  width={320} height={120}
+                  style={{
+                    objectFit: 'contain', objectPosition: 'left bottom',
+                    maxWidth: 'clamp(160px, 40vw, 320px)',
+                    maxHeight: '120px', width: 'auto', height: 'auto',
+                    filter: 'drop-shadow(0 2px 10px rgba(0,0,0,0.8))',
+                  }}
+                />
+              </div>
+            ) : (
+              <h1 style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: 'clamp(28px, 5vw, 60px)',
+                lineHeight: 1, letterSpacing: '2px', marginBottom: '0.75rem',
+              }}>
+                {detail.title}
+              </h1>
+            )}
 
             <div style={{ display: 'flex', gap: '0.75rem', fontSize: '13px', color: '#8884a0', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ color: '#FAC775' }}>⭐ {detail.vote_average?.toFixed(1)}</span>
@@ -63,7 +79,7 @@ export default function MovieDetail({ params }: PageProps) {
               ))}
             </div>
 
-            <p style={{ fontSize: '14px', color: 'rgba(240,239,245,0.7)', lineHeight: '1.7', marginBottom: '1.75rem', maxWidth: '560px' }}>
+            <p style={{ fontSize: 'clamp(13px, 1.5vw, 14px)', color: 'rgba(240,239,245,0.7)', lineHeight: '1.7', marginBottom: '1.75rem', maxWidth: '560px' }}>
               {detail.overview}
             </p>
 
