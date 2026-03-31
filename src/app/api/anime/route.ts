@@ -1,80 +1,81 @@
 import { NextResponse } from 'next/server'
-import { fetchTMDB } from '@/lib/tmdb'
 
-// TMDB genre IDs
-const ANIMATION_GENRE_ID = 16
+const JIKAN = 'https://api.jikan.moe/v4'
 
-// Known anime studios / production companies (optional deep filter)
-const ANIME_KEYWORDS = [210024, 6541] // "anime" keyword IDs on TMDB
+async function fetchJikan(path: string, params: Record<string, string> = {}) {
+  const url = new URL(`${JIKAN}${path}`)
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  const res = await fetch(url.toString(), { next: { revalidate: 3600 } })
+  if (!res.ok) throw new Error(`Jikan error: ${res.status}`)
+  return res.json()
+}
+
+// Map Jikan anime entry to our card shape
+function mapAnime(a: JikanAnime) {
+  return {
+    id:             a.mal_id,
+    media_type:     'tv' as const,
+    title:          a.title_english ?? a.title,
+    name:           a.title_english ?? a.title,
+    poster_path:    null,                          // not used — we use jikan_image
+    jikan_image:    a.images?.webp?.large_image_url ?? a.images?.jpg?.large_image_url ?? null,
+    release_date:   a.aired?.from?.slice(0, 10) ?? '',
+    first_air_date: a.aired?.from?.slice(0, 10) ?? '',
+    vote_average:   a.score ?? 0,
+    episodes:       a.episodes,
+    status:         a.status,
+    mal_id:         a.mal_id,
+  }
+}
+
+interface JikanAnime {
+  mal_id:        number
+  title:         string
+  title_english: string | null
+  images:        { jpg: { large_image_url: string }; webp: { large_image_url: string } }
+  score:         number | null
+  aired:         { from: string | null }
+  episodes:      number | null
+  status:        string
+}
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
-    const filter = searchParams.get('filter') ?? 'popular'  // popular | top_rated | trending | season
+    const filter = searchParams.get('filter') ?? 'popular'
     const page   = searchParams.get('page')   ?? '1'
 
     let data
 
     switch (filter) {
       case 'trending':
-        // Trending anime TV this week
-        data = await fetchTMDB('/trending/tv/week', {
-          page,
-          with_genres:           String(ANIMATION_GENRE_ID),
-          with_original_language: 'ja',
-        })
+        data = await fetchJikan('/top/anime', { page, filter: 'bypopularity', type: 'tv' })
         break
-
       case 'top_rated':
-        // Top rated anime series
-        data = await fetchTMDB('/discover/tv', {
-          page,
-          with_genres:            String(ANIMATION_GENRE_ID),
-          with_original_language: 'ja',
-          sort_by:                'vote_average.desc',
-          'vote_count.gte':       '200',
-        })
+        data = await fetchJikan('/top/anime', { page, type: 'tv' })
         break
-
       case 'season':
-        // Currently airing anime this season
-        data = await fetchTMDB('/discover/tv', {
-          page,
-          with_genres:            String(ANIMATION_GENRE_ID),
-          with_original_language: 'ja',
-          sort_by:                'popularity.desc',
-          with_status:            '0',         // returning series
-          with_type:              '2',          // scripted
-        })
+        data = await fetchJikan('/seasons/now', { page, filter: 'tv' })
         break
-
       case 'movies':
-        // Anime movies
-        data = await fetchTMDB('/discover/movie', {
-          page,
-          with_genres:            String(ANIMATION_GENRE_ID),
-          with_original_language: 'ja',
-          sort_by:                'popularity.desc',
-        })
+        data = await fetchJikan('/top/anime', { page, type: 'movie' })
         break
-
+      case 'upcoming':
+        data = await fetchJikan('/seasons/upcoming', { page })
+        break
       case 'popular':
       default:
-        // Popular anime series
-        data = await fetchTMDB('/discover/tv', {
-          page,
-          with_genres:            String(ANIMATION_GENRE_ID),
-          with_original_language: 'ja',
-          sort_by:                'popularity.desc',
-        })
+        data = await fetchJikan('/top/anime', { page, filter: 'bypopularity', type: 'tv' })
         break
     }
 
+    const results = (data.data ?? []).map(mapAnime)
+
     return NextResponse.json({
-      results:       data.results,
-      total_pages:   data.total_pages,
-      total_results: data.total_results,
-      page:          data.page,
+      results,
+      total_pages:   data.pagination?.last_visible_page ?? 1,
+      total_results: data.pagination?.items?.total ?? results.length,
+      page:          Number(page),
       filter,
     })
   } catch {

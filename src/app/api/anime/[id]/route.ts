@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { fetchTMDB } from '@/lib/tmdb'
+
+const JIKAN = 'https://api.jikan.moe/v4'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -9,25 +10,16 @@ export async function GET(_req: Request, { params }: RouteParams) {
   try {
     const { id } = await params
 
-    const [detail, credits, videos, similar] = await Promise.all([
-      fetchTMDB(`/tv/${id}`),
-      fetchTMDB(`/tv/${id}/credits`),
-      fetchTMDB(`/tv/${id}/videos`),
-      fetchTMDB(`/tv/${id}/similar`),
+    const [detail, characters, recommendations] = await Promise.all([
+      fetch(`${JIKAN}/anime/${id}/full`, { next: { revalidate: 3600 } }).then(r => r.json()),
+      fetch(`${JIKAN}/anime/${id}/characters`, { next: { revalidate: 3600 } }).then(r => r.json()),
+      fetch(`${JIKAN}/anime/${id}/recommendations`, { next: { revalidate: 3600 } }).then(r => r.json()),
     ])
 
-    // Filter similar to only return Japanese animation
-    const similarAnime = similar.results.filter(
-      (item: { original_language: string; genre_ids: number[] }) =>
-        item.original_language === 'ja' &&
-        item.genre_ids?.includes(16)
-    )
-
     return NextResponse.json({
-      detail,
-      credits:      credits.cast.slice(0, 12),
-      videos:       videos.results,
-      similar:      similarAnime.slice(0, 12),
+      detail:          detail.data,
+      characters:      (characters.data ?? []).slice(0, 12),
+      recommendations: (recommendations.data ?? []).slice(0, 12),
     })
   } catch {
     return NextResponse.json({ error: 'Failed to fetch anime details' }, { status: 500 })

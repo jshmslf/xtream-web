@@ -44,6 +44,7 @@ export default function BrowseGrid({
       const mapped: TMDBSearchResult[] = data.results.map((item: Omit<TMDBSearchResult, 'media_type'>) => ({
         ...item,
         media_type: resolvedType,
+        ...(mediaType === 'anime' && { is_anime: true }),
       }))
 
       setItems(prev => replace ? mapped : [...prev, ...mapped])

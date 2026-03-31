@@ -69,6 +69,8 @@ export interface TMDBSearchResult {
   title?: string
   name?: string
   poster_path: string | null
+  jikan_image?: string | null  // anime cards from Jikan API
+  is_anime?: boolean
   release_date?: string
   first_air_date?: string
   vote_average: number
